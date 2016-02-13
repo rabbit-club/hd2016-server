@@ -41,9 +41,15 @@ app.get('/articles', function (req, res) {
   fs.readFile('rss.xml', function (err, data) {
     parser.parseString(data, function (err, json) {
       for (var i in json.rss.channel[0].item) {
-        console.log("title:" + json.rss.channel[0].item[i].title);
-        console.log("description:" + json.rss.channel[0].item[i].description);
-        articles.push(json.rss.channel[0].item[i]);
+        var article = {
+          url: json.rss.channel[0].item[i].url[0],
+          title: json.rss.channel[0].item[i].title[0],
+          // description: json.rss.channel[0].item[i].description[0],
+          shortDescription: json.rss.channel[0].item[i].shortDescription[0],
+          imagePath: json.rss.channel[0].item[i].imagePath[0],
+          voicePath: json.rss.channel[0].item[i].voicePath[0]
+        };
+        articles.push(article);
       }
     });
     return res.json(articles);
