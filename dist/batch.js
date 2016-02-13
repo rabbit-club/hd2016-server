@@ -175,7 +175,8 @@ co(regeneratorRuntime.mark(function _callee() {
             shortDescription: titleDescription,
             imagePath: json.rss.channel[0].item[i].imagePath[0],
             voicePathOgg: '' + baseUrl + fileName + '.ogg',
-            voicePathWav: '' + baseUrl + fileName + '.wav'
+            voicePathWav: '' + baseUrl + fileName + '.wav',
+            voicePathMp3: '' + baseUrl + fileName + '.mp3'
           };
 
           articles.push(article);
