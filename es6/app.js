@@ -10,10 +10,18 @@ app.get('/', (req, res) => {
 });
 
 app.get('/articles', (req, res) => {
-  fs.readFile('result.json', (err, data) => {
-    if (err) return console.log(err);
-    res.json(JSON.parse(data));
-  });
+  var y = req.query.mode;
+  if (y == 'y') {
+    fs.readFile('yresult.json', (err, data) => {
+      if (err) return console.log(err);
+      res.json(JSON.parse(data));
+    });
+  } else {
+    fs.readFile('result.json', (err, data) => {
+      if (err) return console.log(err);
+      res.json(JSON.parse(data));
+    });
+  }
   // var mode = req.query.mode;
   // var q = req.query.q;
   // var sort = req.query.sort;

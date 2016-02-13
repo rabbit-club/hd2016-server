@@ -118,35 +118,72 @@ var writeFile = (filePath, data) => {
   });
 }
 
-co(function* () {
-  var xmlData = yield readFile(__dirname + '/../rss.xml');
-  var json = yield getParseJson(xmlData);
-  var articles = [];
-  var baseUrl = 'http://210.140.161.190:3000/';
-  for (var i in json.rss.channel[0].item) {
-    var title = json.rss.channel[0].item[i].title[0];
-    var description = json.rss.channel[0].item[i].description[0];
-    var body = yield getSummarize(description);
-    body = JSON.parse(body);
-    var shortDescription = '';
-    body.summary.forEach(sentence => {
-      shortDescription += sentence;
+var getFiveFilter = url => {
+  return new Promise((resolve, reject) => {
+    var baseUrl = 'http://ftr.fivefilters.org/makefulltextfeed.php?url=';
+    url = baseUrl + encodeURIComponent(url);
+    request(url, (error, response, body) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      } else {
+        resolve(body);
+      }
     });
-    var titleDescription = `${title}。${shortDescription}`;
-    var fileName = `test0${i}`;
-    yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
-    yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
-    // yield wav2mp3(fileName);
-    var article = {
-      url: json.rss.channel[0].item[i].url[0],
-      title: title,
-      // description: json.rss.channel[0].item[i].description[0],
-      shortDescription: titleDescription,
-      imagePath: json.rss.channel[0].item[i].imagePath[0],
-      voicePathOgg: `${baseUrl}${fileName}.ogg`,
-      voicePathWav: `${baseUrl}${fileName}.wav`
-    };
-    articles.push(article);
+  });
+}
+
+co(function* () {
+  var urls = [
+    'http://deno-blog.com/RSS/yahoo-news-domestic.xml',
+    'http://deno-blog.com/RSS/yahoo-news-world.xml',
+    'http://deno-blog.com/RSS/yahoo-news-economy.xml',
+    'http://deno-blog.com/RSS/yahoo-news-entertainment.xml',
+    'http://deno-blog.com/RSS/yahoo-news-sports.xml',
+    'http://deno-blog.com/RSS/yahoo-news-computer.xml',
+    'http://deno-blog.com/RSS/yahoo-news-science.xml',
+    'http://deno-blog.com/RSS/yahoo-news-local.xml'
+  ];
+  var articles = [];
+  for (var j in urls) {
+    var url = urls[j];
+    var yrssXml = yield getFiveFilter(url);
+    // var xmlData = yield readFile(__dirname + '/../rss.xml');
+    var json = yield getParseJson(yrssXml);
+    var baseUrl = 'http://210.140.161.190:3000/';
+    for (var i in json.rss.channel[0].item) {
+      var url = json.rss.channel[0].item[i].link[0];
+      var title = json.rss.channel[0].item[i].title[0];
+      var description = json.rss.channel[0].item[i].description[0];
+      description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
+      var descriptions = description.split(/\s+/g);
+      descriptions = descriptions.filter(v => {
+        return v.match(/。/);
+      });
+      description = descriptions.join('');
+      var body = yield getSummarize(description);
+      body = JSON.parse(body);
+      var shortDescription = '';
+      body.summary.forEach(sentence => {
+        shortDescription += sentence;
+      });
+      var titleDescription = `${title}。${shortDescription}`;
+      var fileName = `ytest${j}${i}`;
+      yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
+      yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
+      // yield wav2mp3(fileName);
+      var article = {
+        url: url,
+        title: title,
+        // description: json.rss.channel[0].item[i].description[0],
+        shortDescription: titleDescription,
+        // imagePath: json.rss.channel[0].item[i].imagePath[0],
+        imagePath: 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg',
+        voicePathOgg: `${baseUrl}${fileName}.ogg`,
+        voicePathWav: `${baseUrl}${fileName}.wav`
+      };
+      articles.push(article);
+    }
   }
-  return yield writeFile(__dirname + '/../result.json', JSON.stringify(articles));
+  return yield writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
 });
