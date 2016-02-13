@@ -10,7 +10,6 @@ app.use(express.static('public'));
 
 app.get('/', (req, res) => {
   res.send('Hello!');
-  callVoiceText('米Googleは2月12日（現地時間）、写真共有サービス「Picasa」を5月1日に終了すると発表した。この「フォト」は、2015年5月に発表した新たな写真編集・保存・共有サービス「Photos（日本では「フォト」）」に統合された。');
 });
 
 app.get('/articles', (req, res) => {
@@ -39,11 +38,16 @@ app.get('/articles', (req, res) => {
   fs.readFile('rss.xml', (err, data) => {
     parser.parseString(data, (err, json) => {
       for (var i in json.rss.channel[0].item) {
+        var title = json.rss.channel[0].item[i].title[0];
+        var shortDescription = json.rss.channel[0].item[i].shortDescription[0];
+        var titleDescription = `${title}。${shortDescription}`;
+        var fileName = `public/test0${i}.wav`;
+        callVoiceText(fileName, titleDescription);
         var article = {
           url: json.rss.channel[0].item[i].url[0],
-          title: json.rss.channel[0].item[i].title[0],
+          title: title,
           // description: json.rss.channel[0].item[i].description[0],
-          shortDescription: json.rss.channel[0].item[i].shortDescription[0],
+          shortDescription: titleDescription,
           imagePath: json.rss.channel[0].item[i].imagePath[0],
           voicePath: json.rss.channel[0].item[i].voicePath[0],
         };
@@ -66,12 +70,12 @@ app.get('/summarize', (req, res) => {
 
 app.listen(3000);
 
-var callVoiceText = text => {
-  var fileName = "test05.ogg";
+var callVoiceText = (fileName, text) => {
   var voice = new VoiceText('o2hf0u4z1ep3vspu:');
   voice
     .speaker(voice.SPEAKER.HIKARI)
-    .format(voice.FORMAT.OGG)
+    .format(voice.FORMAT.WAV)
+    .emotion(voice.EMOTION.HAPPINESS)
     .speak(text, (e, buf) => {
     if (e) console.log(e);
     fs.writeFile(fileName, buf, 'binary', e => {
