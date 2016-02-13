@@ -3,7 +3,7 @@ var app = express();
 var request = require('request');
 var VoiceText = require('voicetext');
 var fs = require('fs');
-var parser = require('xml2json');
+var xml2js = require('xml2js');
 var Entities = require('html-entities').AllHtmlEntities;
 
 app.use(express.static('public'));
@@ -21,18 +21,31 @@ app.get('/articles', (req, res) => {
   // hatenaUrl = encodeURIComponent(hatenaUrl);
   // var fivefiltersUrl = `http://ftr.fivefilters.org/makefulltextfeed.php?url=${hatenaUrl}`;
   // var fivefiltersUrl = 'http://ftr.fivefilters.org/makefulltextfeed.php?url=http%3A%2F%2Fb.hatena.ne.jp%2Fsearch%2Ftag%3Fmode%3Drss%26q%3D%25E3%2582%25B2%25E3%2583%25BC%25E3%2583%25A0&max=10';
+  // var parser = new xml2js.Parser();
   // request(fivefiltersUrl, (error, response, body) => {
   //   if (error) return console.log(error);
-  //   var json = parser.toJson(body);
-  //   json = JSON.parse(json);
-  //   var entities = new Entities();
-  //   for (var i in json.rss.channel.item) {
-  //     console.log("title:" + entities.decode(json.rss.channel.item[i].title));
-  //     console.log("description:" + entities.decode(json.rss.channel.item[i].description));
-  //   }
+  //   parser.parseString(body, (err, json) => {
+  //     // json = JSON.parse(json);
+  //     console.log(json.rss.channel.item);
+  //     var entities = new Entities();
+  //     for (var i in json.rss.channel.item) {
+  //       console.log("title:" + entities.decode(json.rss.channel.item[i].title));
+  //       console.log("description:" + entities.decode(json.rss.channel.item[i].description));
+  //     }
+  //   });
   // });
   var articles = [];
-
+  var parser = new xml2js.Parser();
+  fs.readFile('rss.xml', (err, data) => {
+    parser.parseString(data, (err, json) => {
+      for (var i in json.rss.channel[0].item) {
+       console.log("title:" + json.rss.channel[0].item[i].title);
+       console.log("description:" + json.rss.channel[0].item[i].description);
+       articles.push(json.rss.channel[0].item[i]);
+      }
+    });
+    return res.json(articles);
+  });
 });
 
 app.get('/summarize', (req, res) => {

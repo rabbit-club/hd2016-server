@@ -30,6 +30,6 @@
     "html-entities": "^1.2.0",
     "request": "^2.69.0",
     "voicetext": "0.0.5",
-    "xml2json": "^0.9.0"
+    "xml2js": "^0.4.16"
   }
 }
