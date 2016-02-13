@@ -9,12 +9,24 @@ var xml2js = require('xml2js');
 var Entities = require('html-entities').AllHtmlEntities;
 var co = require('co');
 
-var callVoiceText = function callVoiceText(fileName, text) {
+var FORMAT_TYPE_OGG = 'ogg';
+var FORMAT_TYPE_WAV = 'wav';
+
+var callVoiceText = function callVoiceText(fileName, text, formatType) {
   return new Promise(function (resolve, reject) {
     var voice = new VoiceText('o2hf0u4z1ep3vspu:');
-    voice.speaker(voice.SPEAKER.HIKARI).format(voice.FORMAT.OGG).emotion(voice.EMOTION.HAPPINESS).speak(text, function (e, buf) {
+    var format;
+    var filePath;
+    if (formatType == FORMAT_TYPE_OGG) {
+      format = voice.FORMAT.OGG;
+      filePath = __dirname + ('/../public/' + fileName + '.ogg');
+    } else if (formatType == FORMAT_TYPE_WAV) {
+      filePath = __dirname + ('/../public/' + fileName + '.wav');
+      format = voice.FORMAT.WAV;
+    }
+    voice.speaker(voice.SPEAKER.HIKARI).format(format).emotion(voice.EMOTION.HAPPINESS).speak(text, function (e, buf) {
       if (e) console.log(e);
-      fs.writeFile(fileName, buf, 'binary', function (e) {
+      fs.writeFile(filePath, buf, 'binary', function (e) {
         if (e) {
           console.log(e);
           reject(e);
@@ -82,7 +94,7 @@ var writeFile = function writeFile(filePath, data) {
 };
 
 co(regeneratorRuntime.mark(function _callee() {
-  var xmlData, json, articles, i, title, description, body, shortDescription, titleDescription, fileName, article;
+  var xmlData, json, articles, baseUrl, i, title, description, body, shortDescription, titleDescription, fileName, article;
   return regeneratorRuntime.wrap(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -98,21 +110,22 @@ co(regeneratorRuntime.mark(function _callee() {
         case 5:
           json = _context.sent;
           articles = [];
+          baseUrl = 'http://210.140.161.190:3000/';
           _context.t0 = regeneratorRuntime.keys(json.rss.channel[0].item);
 
-        case 8:
+        case 9:
           if ((_context.t1 = _context.t0()).done) {
-            _context.next = 26;
+            _context.next = 29;
             break;
           }
 
           i = _context.t1.value;
           title = json.rss.channel[0].item[i].title[0];
           description = json.rss.channel[0].item[i].description[0];
-          _context.next = 14;
+          _context.next = 15;
           return getSummarize(description);
 
-        case 14:
+        case 15:
           body = _context.sent;
 
           body = JSON.parse(body);
@@ -122,32 +135,37 @@ co(regeneratorRuntime.mark(function _callee() {
             shortDescription += sentence;
           });
           titleDescription = title + '。' + shortDescription;
-          fileName = __dirname + ('/../public/test0' + i + '.ogg');
-          _context.next = 22;
-          return callVoiceText(fileName, titleDescription);
+          fileName = 'test0' + i;
+          _context.next = 23;
+          return callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
 
-        case 22:
+        case 23:
+          _context.next = 25;
+          return callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
+
+        case 25:
           article = {
             url: json.rss.channel[0].item[i].url[0],
             title: title,
             // description: json.rss.channel[0].item[i].description[0],
             shortDescription: titleDescription,
             imagePath: json.rss.channel[0].item[i].imagePath[0],
-            voicePath: json.rss.channel[0].item[i].voicePath[0]
+            voicePathOgg: '' + baseUrl + fileName + '.ogg',
+            voicePathWav: '' + baseUrl + fileName + '.wav'
           };
 
           articles.push(article);
-          _context.next = 8;
+          _context.next = 9;
           break;
 
-        case 26:
-          _context.next = 28;
+        case 29:
+          _context.next = 31;
           return writeFile(__dirname + '/../result.json', JSON.stringify(articles));
 
-        case 28:
+        case 31:
           return _context.abrupt('return', _context.sent);
 
-        case 29:
+        case 32:
         case 'end':
           return _context.stop();
       }

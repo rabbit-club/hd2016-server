@@ -7,16 +7,28 @@ var xml2js = require('xml2js');
 var Entities = require('html-entities').AllHtmlEntities;
 var co = require('co');
 
-var callVoiceText = (fileName, text) => {
+const FORMAT_TYPE_OGG = 'ogg';
+const FORMAT_TYPE_WAV = 'wav';
+
+var callVoiceText = (fileName, text, formatType) => {
   return new Promise((resolve, reject) => {
     var voice = new VoiceText('o2hf0u4z1ep3vspu:');
+    var format;
+    var filePath;
+    if (formatType == FORMAT_TYPE_OGG) {
+      format = voice.FORMAT.OGG;
+      filePath = __dirname + `/../public/${fileName}.ogg`;
+    } else if (formatType == FORMAT_TYPE_WAV) {
+      filePath = __dirname + `/../public/${fileName}.wav`;
+      format = voice.FORMAT.WAV;
+    }
     voice
       .speaker(voice.SPEAKER.HIKARI)
-      .format(voice.FORMAT.OGG)
+      .format(format)
       .emotion(voice.EMOTION.HAPPINESS)
       .speak(text, (e, buf) => {
       if (e) console.log(e);
-        fs.writeFile(fileName, buf, 'binary', e => {
+        fs.writeFile(filePath, buf, 'binary', e => {
           if (e) {
             console.log(e);
             reject(e);
@@ -87,6 +99,7 @@ co(function* () {
   var xmlData = yield readFile(__dirname + '/../rss.xml');
   var json = yield getParseJson(xmlData);
   var articles = [];
+  var baseUrl = 'http://210.140.161.190:3000/';
   for (var i in json.rss.channel[0].item) {
     var title = json.rss.channel[0].item[i].title[0];
     var description = json.rss.channel[0].item[i].description[0];
@@ -97,15 +110,17 @@ co(function* () {
       shortDescription += sentence;
     });
     var titleDescription = `${title}。${shortDescription}`;
-    var fileName = __dirname + `/../public/test0${i}.ogg`;
-    yield callVoiceText(fileName, titleDescription);
+    var fileName = `test0${i}`;
+    yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
+    yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
     var article = {
       url: json.rss.channel[0].item[i].url[0],
       title: title,
       // description: json.rss.channel[0].item[i].description[0],
       shortDescription: titleDescription,
       imagePath: json.rss.channel[0].item[i].imagePath[0],
-      voicePath: json.rss.channel[0].item[i].voicePath[0],
+      voicePathOgg: `${baseUrl}${fileName}.ogg`,
+      voicePathWav: `${baseUrl}${fileName}.wav`
     };
     articles.push(article);
   }
