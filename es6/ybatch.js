@@ -172,13 +172,16 @@ co(function* () {
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
       // yield wav2mp3(fileName);
+      var imagePath = json.rss.channel[0].item[i]['og:image'][0];
+      if (imagePath == "") {
+        imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';
+      }
       var article = {
         url: url,
         title: title,
         // description: json.rss.channel[0].item[i].description[0],
         shortDescription: titleDescription,
-        // imagePath: json.rss.channel[0].item[i].imagePath[0],
-        imagePath: 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg',
+        imagePath: imagePath,
         voicePathOgg: `${baseUrl}${fileName}.ogg`,
         voicePathWav: `${baseUrl}${fileName}.wav`
       };

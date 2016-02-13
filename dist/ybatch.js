@@ -132,7 +132,7 @@ var getFiveFilter = function getFiveFilter(url) {
 };
 
 co(regeneratorRuntime.mark(function _callee() {
-  var urls, articles, j, url, yrssXml, json, baseUrl, i, title, description, descriptions, body, shortDescription, titleDescription, fileName, article;
+  var urls, articles, j, url, yrssXml, json, baseUrl, i, title, description, descriptions, body, shortDescription, titleDescription, fileName, imagePath, article;
   return regeneratorRuntime.wrap(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -143,7 +143,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 3:
           if ((_context.t1 = _context.t0()).done) {
-            _context.next = 41;
+            _context.next = 43;
             break;
           }
 
@@ -164,7 +164,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 14:
           if ((_context.t3 = _context.t2()).done) {
-            _context.next = 39;
+            _context.next = 41;
             break;
           }
 
@@ -203,13 +203,17 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 35:
           // yield wav2mp3(fileName);
+          imagePath = json.rss.channel[0].item[i]['og:image'][0];
+
+          if (imagePath == "") {
+            imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';
+          }
           article = {
             url: url,
             title: title,
             // description: json.rss.channel[0].item[i].description[0],
             shortDescription: titleDescription,
-            // imagePath: json.rss.channel[0].item[i].imagePath[0],
-            imagePath: 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg',
+            imagePath: imagePath,
             voicePathOgg: '' + baseUrl + fileName + '.ogg',
             voicePathWav: '' + baseUrl + fileName + '.wav'
           };
@@ -218,18 +222,18 @@ co(regeneratorRuntime.mark(function _callee() {
           _context.next = 14;
           break;
 
-        case 39:
+        case 41:
           _context.next = 3;
           break;
 
-        case 41:
-          _context.next = 43;
+        case 43:
+          _context.next = 45;
           return writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
 
-        case 43:
+        case 45:
           return _context.abrupt('return', _context.sent);
 
-        case 44:
+        case 46:
         case 'end':
           return _context.stop();
       }
