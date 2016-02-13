@@ -6,3 +6,4 @@
 *.aac
 node_modules/*
 !voicetext
+result.json

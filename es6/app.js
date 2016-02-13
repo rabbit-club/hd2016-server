@@ -1,10 +1,7 @@
 var express = require('express');
 var app = express();
 var request = require('request');
-var VoiceText = require('voicetext');
 var fs = require('fs');
-var xml2js = require('xml2js');
-var Entities = require('html-entities').AllHtmlEntities;
 
 app.use(express.static('public'));
 
@@ -13,6 +10,10 @@ app.get('/', (req, res) => {
 });
 
 app.get('/articles', (req, res) => {
+  fs.readFile('result.json', (err, data) => {
+    if (err) return console.log(err);
+    res.json(JSON.parse(data));
+  });
   // var mode = req.query.mode;
   // var q = req.query.q;
   // var sort = req.query.sort;
@@ -33,29 +34,6 @@ app.get('/articles', (req, res) => {
   //     }
   //   });
   // });
-  var articles = [];
-  var parser = new xml2js.Parser();
-  fs.readFile('rss.xml', (err, data) => {
-    parser.parseString(data, (err, json) => {
-      for (var i in json.rss.channel[0].item) {
-        var title = json.rss.channel[0].item[i].title[0];
-        var shortDescription = json.rss.channel[0].item[i].shortDescription[0];
-        var titleDescription = `${title}。${shortDescription}`;
-        var fileName = `public/test0${i}.wav`;
-        callVoiceText(fileName, titleDescription);
-        var article = {
-          url: json.rss.channel[0].item[i].url[0],
-          title: title,
-          // description: json.rss.channel[0].item[i].description[0],
-          shortDescription: titleDescription,
-          imagePath: json.rss.channel[0].item[i].imagePath[0],
-          voicePath: json.rss.channel[0].item[i].voicePath[0],
-        };
-        articles.push(article);
-      }
-    });
-    return res.json(articles);
-  });
 });
 
 app.get('/summarize', (req, res) => {
@@ -71,15 +49,60 @@ app.get('/summarize', (req, res) => {
 app.listen(3000);
 
 var callVoiceText = (fileName, text) => {
-  var voice = new VoiceText('o2hf0u4z1ep3vspu:');
-  voice
-    .speaker(voice.SPEAKER.HIKARI)
-    .format(voice.FORMAT.WAV)
-    .emotion(voice.EMOTION.HAPPINESS)
-    .speak(text, (e, buf) => {
-    if (e) console.log(e);
-    fs.writeFile(fileName, buf, 'binary', e => {
-     console.log(e);
-   });
+  return new Promise((resolve, reject) => {
+    var voice = new VoiceText('o2hf0u4z1ep3vspu:');
+    voice
+      .speaker(voice.SPEAKER.HIKARI)
+      .format(voice.FORMAT.WAV)
+      .emotion(voice.EMOTION.HAPPINESS)
+      .speak(text, (e, buf) => {
+      if (e) console.log(e);
+        fs.writeFile(fileName, buf, 'binary', e => {
+          if (e) {
+            reject(e);
+          } else {
+            resolve(true);
+          }
+       });
+    });
+  });
+}
+
+var getSummarize = text => {
+  return new Promise((resolve, reject) => {
+    text = encodeURIComponent(text);
+    var url = `http://127.0.0.1:8080/summarize?char_limit=150&text=${text}`;
+    request(url, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+}
+
+var getParseJson = data => {
+  return new Promise((resolve, reject) => {
+    var parser = new xml2js.Parser();
+    parser.parseString(data, (err, json) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(json);
+      }
+    });
+  });
+}
+
+var readFile = filePath => {
+  return new Promise((resolve, reject) => {
+    fs.readFile(filePath, (err, data) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(data);
+      }
+    });
   });
 }
