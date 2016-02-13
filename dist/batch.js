@@ -88,7 +88,7 @@ co(regeneratorRuntime.mark(function _callee() {
       switch (_context.prev = _context.next) {
         case 0:
           _context.next = 2;
-          return readFile('rss.xml');
+          return readFile(__dirname + '/../rss.xml');
 
         case 2:
           xmlData = _context.sent;
@@ -122,7 +122,7 @@ co(regeneratorRuntime.mark(function _callee() {
             shortDescription += sentence;
           });
           titleDescription = title + '。' + shortDescription;
-          fileName = 'public/test0' + i + '.ogg';
+          fileName = __dirname + ('/../public/test0' + i + '.ogg');
           _context.next = 22;
           return callVoiceText(fileName, titleDescription);
 
@@ -142,7 +142,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 26:
           _context.next = 28;
-          return writeFile('result.json', JSON.stringify(articles));
+          return writeFile(__dirname + '/../result.json', JSON.stringify(articles));
 
         case 28:
           return _context.abrupt('return', _context.sent);

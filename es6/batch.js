@@ -84,7 +84,7 @@ var writeFile = (filePath, data) => {
 }
 
 co(function* () {
-  var xmlData = yield readFile('rss.xml');
+  var xmlData = yield readFile(__dirname + '/../rss.xml');
   var json = yield getParseJson(xmlData);
   var articles = [];
   for (var i in json.rss.channel[0].item) {
@@ -97,7 +97,7 @@ co(function* () {
       shortDescription += sentence;
     });
     var titleDescription = `${title}。${shortDescription}`;
-    var fileName = `public/test0${i}.ogg`;
+    var fileName = __dirname + `/../public/test0${i}.ogg`;
     yield callVoiceText(fileName, titleDescription);
     var article = {
       url: json.rss.channel[0].item[i].url[0],
@@ -109,5 +109,5 @@ co(function* () {
     };
     articles.push(article);
   }
-  return yield writeFile('result.json', JSON.stringify(articles));
+  return yield writeFile(__dirname + '/../result.json', JSON.stringify(articles));
 });
