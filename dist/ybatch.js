@@ -64,7 +64,7 @@ var wav2mp3 = function wav2mp3(fileName) {
 var getSummarize = function getSummarize(text) {
   return new Promise(function (resolve, reject) {
     text = encodeURIComponent(text);
-    var url = 'http://127.0.0.1:8080/summarize?char_limit=150&text=' + text;
+    var url = 'http://127.0.0.1:8080/summarize?char_limit=156&text=' + text;
     request(url, function (error, response, body) {
       if (error) {
         console.log(error);
