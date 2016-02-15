@@ -138,7 +138,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 9:
           if ((_context.t1 = _context.t0()).done) {
-            _context.next = 29;
+            _context.next = 31;
             break;
           }
 
@@ -167,7 +167,10 @@ co(regeneratorRuntime.mark(function _callee() {
           return callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
 
         case 25:
-          // yield wav2mp3(fileName);
+          _context.next = 27;
+          return wav2mp3(fileName);
+
+        case 27:
           article = {
             url: json.rss.channel[0].item[i].url[0],
             title: title,
@@ -183,14 +186,14 @@ co(regeneratorRuntime.mark(function _callee() {
           _context.next = 9;
           break;
 
-        case 29:
-          _context.next = 31;
+        case 31:
+          _context.next = 33;
           return writeFile(__dirname + '/../result.json', JSON.stringify(articles));
 
-        case 31:
+        case 33:
           return _context.abrupt('return', _context.sent);
 
-        case 32:
+        case 34:
         case 'end':
           return _context.stop();
       }

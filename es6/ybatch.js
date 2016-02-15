@@ -171,7 +171,7 @@ co(function* () {
       var fileName = `ytest${j}${i}`;
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
-      // yield wav2mp3(fileName);
+      yield wav2mp3(fileName);
       var imagePath = json.rss.channel[0].item[i]['og:image'][0];
       if (imagePath == "") {
         imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';

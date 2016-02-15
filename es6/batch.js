@@ -136,7 +136,7 @@ co(function* () {
     var fileName = `test0${i}`;
     yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
     yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
-    // yield wav2mp3(fileName);
+    yield wav2mp3(fileName);
     var article = {
       url: json.rss.channel[0].item[i].url[0],
       title: title,

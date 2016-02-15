@@ -143,7 +143,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 3:
           if ((_context.t1 = _context.t0()).done) {
-            _context.next = 43;
+            _context.next = 45;
             break;
           }
 
@@ -164,7 +164,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 14:
           if ((_context.t3 = _context.t2()).done) {
-            _context.next = 41;
+            _context.next = 43;
             break;
           }
 
@@ -202,7 +202,10 @@ co(regeneratorRuntime.mark(function _callee() {
           return callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
 
         case 35:
-          // yield wav2mp3(fileName);
+          _context.next = 37;
+          return wav2mp3(fileName);
+
+        case 37:
           imagePath = json.rss.channel[0].item[i]['og:image'][0];
 
           if (imagePath == "") {
@@ -222,18 +225,18 @@ co(regeneratorRuntime.mark(function _callee() {
           _context.next = 14;
           break;
 
-        case 41:
+        case 43:
           _context.next = 3;
           break;
 
-        case 43:
-          _context.next = 45;
+        case 45:
+          _context.next = 47;
           return writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
 
-        case 45:
+        case 47:
           return _context.abrupt('return', _context.sent);
 
-        case 46:
+        case 48:
         case 'end':
           return _context.stop();
       }
