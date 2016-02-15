@@ -183,7 +183,8 @@ co(function* () {
         shortDescription: titleDescription,
         imagePath: imagePath,
         voicePathOgg: `${baseUrl}${fileName}.ogg`,
-        voicePathWav: `${baseUrl}${fileName}.wav`
+        voicePathWav: `${baseUrl}${fileName}.wav`,
+        voicePathMp3: `${baseUrl}${fileName}.mp3`
       };
       articles.push(article);
     }
