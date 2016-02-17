@@ -9,6 +9,7 @@ var xml2js = require('xml2js');
 var Entities = require('html-entities').AllHtmlEntities;
 var co = require('co');
 var sox = require('sox');
+var exec = require('exec');
 
 var FORMAT_TYPE_OGG = 'ogg';
 var FORMAT_TYPE_WAV = 'wav';
@@ -58,6 +59,21 @@ var wav2mp3 = function wav2mp3(fileName) {
       resolve(true);
     });
     job.start();
+  });
+};
+
+var soxExec = function soxExec(fileName) {
+  return new Promise(function (resolve, reject) {
+    var wavFilePath = __dirname + ('/../public/' + fileName + '.wav');
+    var mp3FilePath = __dirname + ('/../public/' + fileName + '.mp3');
+    exec(['sox', wavFilePath, mp3FilePath], function (err, out, code) {
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
   });
 };
 
@@ -203,7 +219,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 35:
           _context.next = 37;
-          return wav2mp3(fileName);
+          return soxExec(fileName);
 
         case 37:
           imagePath = json.rss.channel[0].item[i]['og:image'][0];

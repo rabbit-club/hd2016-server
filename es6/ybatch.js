@@ -7,6 +7,7 @@ var xml2js = require('xml2js');
 var Entities = require('html-entities').AllHtmlEntities;
 var co = require('co');
 var sox = require('sox');
+var exec = require('exec');
 
 const FORMAT_TYPE_OGG = 'ogg';
 const FORMAT_TYPE_WAV = 'wav';
@@ -60,6 +61,21 @@ var wav2mp3 = fileName => {
       resolve(true);
     });
     job.start();
+  });
+}
+
+var soxExec = fileName => {
+  return new Promise((resolve, reject) => {
+    var wavFilePath = __dirname + `/../public/${fileName}.wav`;
+    var mp3FilePath = __dirname + `/../public/${fileName}.mp3`;
+    exec(['sox', wavFilePath, mp3FilePath], (err, out, code) => {
+      if (err) {
+        console.log(err);
+        reject(err);
+      } else {
+        resolve(true);
+      }
+    });
   });
 }
 
@@ -171,7 +187,8 @@ co(function* () {
       var fileName = `ytest${j}${i}`;
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
-      yield wav2mp3(fileName);
+      // yield wav2mp3(fileName);
+      yield soxExec(fileName);
       var imagePath = json.rss.channel[0].item[i]['og:image'][0];
       if (imagePath == "") {
         imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';
