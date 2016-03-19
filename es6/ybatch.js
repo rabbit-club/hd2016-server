@@ -150,61 +150,67 @@ var getFiveFilter = url => {
 }
 
 co(function* () {
-  var urls = [
-    'http://deno-blog.com/RSS/yahoo-news-domestic.xml',
-    'http://deno-blog.com/RSS/yahoo-news-world.xml',
-    'http://deno-blog.com/RSS/yahoo-news-economy.xml',
-    'http://deno-blog.com/RSS/yahoo-news-entertainment.xml',
-    'http://deno-blog.com/RSS/yahoo-news-sports.xml',
-    'http://deno-blog.com/RSS/yahoo-news-computer.xml',
-    'http://deno-blog.com/RSS/yahoo-news-science.xml',
-    'http://deno-blog.com/RSS/yahoo-news-local.xml'
-  ];
-  var articles = [];
-  for (var j in urls) {
-    var url = urls[j];
-    var yrssXml = yield getFiveFilter(url);
-    // var xmlData = yield readFile(__dirname + '/../rss.xml');
-    var json = yield getParseJson(yrssXml);
-    var baseUrl = 'http://210.140.161.190:3000/';
-    for (var i in json.rss.channel[0].item) {
-      var url = json.rss.channel[0].item[i].link[0];
-      var title = json.rss.channel[0].item[i].title[0];
-      var description = json.rss.channel[0].item[i].description[0];
-      description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
-      var descriptions = description.split(/\s+/g);
-      descriptions = descriptions.filter(v => {
-        return v.match(/。/);
-      });
-      description = descriptions.join('');
-      var body = yield getSummarize(description);
-      body = JSON.parse(body);
-      var shortDescription = '';
-      body.summary.forEach(sentence => {
-        shortDescription += sentence;
-      });
-      var titleDescription = `${title}。${shortDescription}`;
-      var fileName = `ytest${j}${i}`;
-      yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
-      yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
-      // yield wav2mp3(fileName);
-      yield soxExec(fileName);
-      var imagePath = json.rss.channel[0].item[i]['og:image'][0];
-      if (imagePath == "") {
-        imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';
+  console.log('start ybatch');
+  try {
+    var urls = [
+      'http://news.yahoo.co.jp/pickup/domestic/rss.xml',
+      'http://news.yahoo.co.jp/pickup/world/rss.xml',
+      'http://news.yahoo.co.jp/pickup/economy/rss.xml',
+      'http://news.yahoo.co.jp/pickup/entertainment/rss.xml',
+      'http://news.yahoo.co.jp/pickup/sports/rss.xml',
+      'http://news.yahoo.co.jp/pickup/computer/rss.xml',
+      'http://news.yahoo.co.jp/pickup/science/rss.xml',
+      'http://news.yahoo.co.jp/pickup/local/rss.xml'
+    ];
+    var articles = [];
+    for (var j in urls) {
+      var url = urls[j];
+      var yrssXml = yield getFiveFilter(url);
+      // var xmlData = yield readFile(__dirname + '/../rss.xml');
+      var json = yield getParseJson(yrssXml);
+      var baseUrl = 'http://210.140.161.190:3000/';
+      for (var i in json.rss.channel[0].item) {
+        var url = json.rss.channel[0].item[i].link[0];
+        var title = json.rss.channel[0].item[i].title[0];
+        var description = json.rss.channel[0].item[i].description[0];
+        description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
+        var descriptions = description.split(/\s+/g);
+//        descriptions = descriptions.filter(v => {
+//          return v.match(/。/);
+//        });
+        description = descriptions.join('');
+        var body = yield getSummarize(description);
+        body = JSON.parse(body);
+        var shortDescription = '';
+        body.summary.forEach(sentence => {
+          shortDescription += sentence;
+        });
+        var titleDescription = `${title}。${shortDescription}`;
+        var fileName = `ytest${j}${i}`;
+        yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
+        yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
+        yield wav2mp3(fileName);
+        //yield soxExec(fileName);
+        var imagePath = json.rss.channel[0].item[i]['og:image'][0];
+        if (imagePath == "") {
+          imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';
+        }
+        var article = {
+          url: url,
+          title: title,
+          // description: json.rss.channel[0].item[i].description[0],
+          shortDescription: titleDescription,
+          imagePath: imagePath,
+          voicePathOgg: `${baseUrl}${fileName}.ogg`,
+          voicePathWav: `${baseUrl}${fileName}.wav`,
+          voicePathMp3: `${baseUrl}${fileName}.mp3`
+        };
+        articles.push(article);
       }
-      var article = {
-        url: url,
-        title: title,
-        // description: json.rss.channel[0].item[i].description[0],
-        shortDescription: titleDescription,
-        imagePath: imagePath,
-        voicePathOgg: `${baseUrl}${fileName}.ogg`,
-        voicePathWav: `${baseUrl}${fileName}.wav`,
-        voicePathMp3: `${baseUrl}${fileName}.mp3`
-      };
-      articles.push(article);
     }
+    return yield writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
+  } catch (e) {
+    console.error(e);
   }
-  return yield writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
+  console.log('end ybatch');
 });

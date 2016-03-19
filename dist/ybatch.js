@@ -153,34 +153,36 @@ co(regeneratorRuntime.mark(function _callee() {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
-          urls = ['http://deno-blog.com/RSS/yahoo-news-domestic.xml', 'http://deno-blog.com/RSS/yahoo-news-world.xml', 'http://deno-blog.com/RSS/yahoo-news-economy.xml', 'http://deno-blog.com/RSS/yahoo-news-entertainment.xml', 'http://deno-blog.com/RSS/yahoo-news-sports.xml', 'http://deno-blog.com/RSS/yahoo-news-computer.xml', 'http://deno-blog.com/RSS/yahoo-news-science.xml', 'http://deno-blog.com/RSS/yahoo-news-local.xml'];
+          console.log('start ybatch');
+          _context.prev = 1;
+          urls = ['http://news.yahoo.co.jp/pickup/domestic/rss.xml', 'http://news.yahoo.co.jp/pickup/world/rss.xml', 'http://news.yahoo.co.jp/pickup/economy/rss.xml', 'http://news.yahoo.co.jp/pickup/entertainment/rss.xml', 'http://news.yahoo.co.jp/pickup/sports/rss.xml', 'http://news.yahoo.co.jp/pickup/computer/rss.xml', 'http://news.yahoo.co.jp/pickup/science/rss.xml', 'http://news.yahoo.co.jp/pickup/local/rss.xml'];
           articles = [];
           _context.t0 = regeneratorRuntime.keys(urls);
 
-        case 3:
+        case 5:
           if ((_context.t1 = _context.t0()).done) {
-            _context.next = 45;
+            _context.next = 46;
             break;
           }
 
           j = _context.t1.value;
           url = urls[j];
-          _context.next = 8;
+          _context.next = 10;
           return getFiveFilter(url);
 
-        case 8:
+        case 10:
           yrssXml = _context.sent;
-          _context.next = 11;
+          _context.next = 13;
           return getParseJson(yrssXml);
 
-        case 11:
+        case 13:
           json = _context.sent;
           baseUrl = 'http://210.140.161.190:3000/';
           _context.t2 = regeneratorRuntime.keys(json.rss.channel[0].item);
 
-        case 14:
+        case 16:
           if ((_context.t3 = _context.t2()).done) {
-            _context.next = 43;
+            _context.next = 44;
             break;
           }
 
@@ -191,15 +193,15 @@ co(regeneratorRuntime.mark(function _callee() {
 
           description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
           descriptions = description.split(/\s+/g);
+          //        descriptions = descriptions.filter(v => {
+          //          return v.match(/。/);
+          //        });
 
-          descriptions = descriptions.filter(function (v) {
-            return v.match(/。/);
-          });
           description = descriptions.join('');
-          _context.next = 25;
+          _context.next = 26;
           return getSummarize(description);
 
-        case 25:
+        case 26:
           body = _context.sent;
 
           body = JSON.parse(body);
@@ -210,18 +212,19 @@ co(regeneratorRuntime.mark(function _callee() {
           });
           titleDescription = title + '。' + shortDescription;
           fileName = 'ytest' + j + i;
-          _context.next = 33;
+          _context.next = 34;
           return callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
 
-        case 33:
-          _context.next = 35;
+        case 34:
+          _context.next = 36;
           return callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
 
-        case 35:
-          _context.next = 37;
-          return soxExec(fileName);
+        case 36:
+          _context.next = 38;
+          return wav2mp3(fileName);
 
-        case 37:
+        case 38:
+          //yield soxExec(fileName);
           imagePath = json.rss.channel[0].item[i]['og:image'][0];
 
           if (imagePath == "") {
@@ -239,24 +242,33 @@ co(regeneratorRuntime.mark(function _callee() {
           };
 
           articles.push(article);
-          _context.next = 14;
+          _context.next = 16;
           break;
 
-        case 43:
-          _context.next = 3;
+        case 44:
+          _context.next = 5;
           break;
 
-        case 45:
-          _context.next = 47;
+        case 46:
+          _context.next = 48;
           return writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
 
-        case 47:
+        case 48:
           return _context.abrupt('return', _context.sent);
 
-        case 48:
+        case 51:
+          _context.prev = 51;
+          _context.t4 = _context['catch'](1);
+
+          console.error(_context.t4);
+
+        case 54:
+          console.log('end ybatch');
+
+        case 55:
         case 'end':
           return _context.stop();
       }
     }
-  }, _callee, this);
+  }, _callee, this, [[1, 51]]);
 }));
