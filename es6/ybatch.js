@@ -180,6 +180,7 @@ co(function* () {
       title = title.replace(/(\(|（).*(\)|）)/g, '');
 
       var description = json['rdf:RDF'].item[i].description[0];
+      description = description.replace(/(\(|（|【).*(\)|）|】)/g, '');
       // description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
       // var descriptions = description.split(/\s+/g);
 //        descriptions = descriptions.filter(v => {
@@ -189,9 +190,19 @@ co(function* () {
       var body = yield getSummarize(description);
       body = JSON.parse(body);
       var shortDescription = '';
-      body.summary.forEach(sentence => {
-        shortDescription += sentence;
-      });
+      try {
+        body.summary.forEach(sentence => {
+          if (sentence.match(/。/)) {
+            shortDescription += sentence;
+          }
+        });
+      } catch (er) {
+        console.error(er);
+        continue;
+      }
+      if (shortDescription == '') {
+        continue;
+      }
       var titleDescription = `${title}。${shortDescription}`;
       var fileName = `ytest${i}`;
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
@@ -217,6 +228,7 @@ co(function* () {
     yield writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
     console.log('end ybatch');
   } catch (e) {
+        console.log('moge');
     console.error(e);
   }
 });

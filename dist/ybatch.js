@@ -186,7 +186,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 12:
           if ((_context.t1 = _context.t0()).done) {
-            _context.next = 39;
+            _context.next = 49;
             break;
           }
 
@@ -200,39 +200,62 @@ co(regeneratorRuntime.mark(function _callee() {
           title = title.replace(/(\(|（).*(\)|）)/g, '');
 
           description = json['rdf:RDF'].item[i].description[0];
+
+          description = description.replace(/(\(|（|【).*(\)|）|】)/g, '');
           // description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
           // var descriptions = description.split(/\s+/g);
           //        descriptions = descriptions.filter(v => {
           //          return v.match(/。/);
           //        });
           // description = descriptions.join('');
-
-          _context.next = 21;
+          _context.next = 22;
           return getSummarize(description);
 
-        case 21:
+        case 22:
           body = _context.sent;
 
           body = JSON.parse(body);
           shortDescription = '';
+          _context.prev = 25;
 
           body.summary.forEach(function (sentence) {
-            shortDescription += sentence;
+            if (sentence.match(/。/)) {
+              shortDescription += sentence;
+            }
           });
-          titleDescription = title + '。' + shortDescription;
-          fileName = 'ytest' + i;
-          _context.next = 29;
-          return callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
+          _context.next = 33;
+          break;
 
         case 29:
-          _context.next = 31;
-          return callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
+          _context.prev = 29;
+          _context.t2 = _context['catch'](25);
 
-        case 31:
-          _context.next = 33;
-          return wav2mp3(fileName);
+          console.error(_context.t2);
+          return _context.abrupt('continue', 12);
 
         case 33:
+          if (!(shortDescription == '')) {
+            _context.next = 35;
+            break;
+          }
+
+          return _context.abrupt('continue', 12);
+
+        case 35:
+          titleDescription = title + '。' + shortDescription;
+          fileName = 'ytest' + i;
+          _context.next = 39;
+          return callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
+
+        case 39:
+          _context.next = 41;
+          return callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
+
+        case 41:
+          _context.next = 43;
+          return wav2mp3(fileName);
+
+        case 43:
           // var imagePath = json.rss.channel[0].item[i]['og:image'][0];
           imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
 
@@ -254,25 +277,26 @@ co(regeneratorRuntime.mark(function _callee() {
           _context.next = 12;
           break;
 
-        case 39:
-          _context.next = 41;
+        case 49:
+          _context.next = 51;
           return writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
 
-        case 41:
+        case 51:
           console.log('end ybatch');
-          _context.next = 47;
+          _context.next = 58;
           break;
 
-        case 44:
-          _context.prev = 44;
-          _context.t2 = _context['catch'](1);
+        case 54:
+          _context.prev = 54;
+          _context.t3 = _context['catch'](1);
 
-          console.error(_context.t2);
+          console.log('moge');
+          console.error(_context.t3);
 
-        case 47:
+        case 58:
         case 'end':
           return _context.stop();
       }
     }
-  }, _callee, this, [[1, 44]]);
+  }, _callee, this, [[1, 54], [25, 29]]);
 }));
