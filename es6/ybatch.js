@@ -7,7 +7,6 @@ var xml2js = require('xml2js');
 var Entities = require('html-entities').AllHtmlEntities;
 var co = require('co');
 var sox = require('sox');
-var exec = require('exec');
 
 const FORMAT_TYPE_OGG = 'ogg';
 const FORMAT_TYPE_WAV = 'wav';
@@ -61,21 +60,6 @@ var wav2mp3 = fileName => {
       resolve(true);
     });
     job.start();
-  });
-}
-
-var soxExec = fileName => {
-  return new Promise((resolve, reject) => {
-    var wavFilePath = __dirname + `/../public/${fileName}.wav`;
-    var mp3FilePath = __dirname + `/../public/${fileName}.mp3`;
-    exec(['sox', wavFilePath, mp3FilePath], (err, out, code) => {
-      if (err) {
-        console.log(err);
-        reject(err);
-      } else {
-        resolve(true);
-      }
-    });
   });
 }
 
@@ -149,68 +133,90 @@ var getFiveFilter = url => {
   });
 }
 
+var getRequest = options => {
+  return new Promise((resolve, reject) => {
+    request(options, (error, response, body) => {
+      if (error) {
+        console.log(error);
+        reject(error);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+}
+
 co(function* () {
   console.log('start ybatch');
   try {
-    var urls = [
-      'http://news.yahoo.co.jp/pickup/domestic/rss.xml',
-      'http://news.yahoo.co.jp/pickup/world/rss.xml',
-      'http://news.yahoo.co.jp/pickup/economy/rss.xml',
-      'http://news.yahoo.co.jp/pickup/entertainment/rss.xml',
-      'http://news.yahoo.co.jp/pickup/sports/rss.xml',
-      'http://news.yahoo.co.jp/pickup/computer/rss.xml',
-      'http://news.yahoo.co.jp/pickup/science/rss.xml',
-      'http://news.yahoo.co.jp/pickup/local/rss.xml'
-    ];
+    // var urls = [
+    //   'http://news.yahoo.co.jp/pickup/domestic/rss.xml',
+    //   'http://news.yahoo.co.jp/pickup/world/rss.xml',
+    //   'http://news.yahoo.co.jp/pickup/economy/rss.xml',
+    //   'http://news.yahoo.co.jp/pickup/entertainment/rss.xml',
+    //   'http://news.yahoo.co.jp/pickup/sports/rss.xml',
+    //   'http://news.yahoo.co.jp/pickup/computer/rss.xml',
+    //   'http://news.yahoo.co.jp/pickup/science/rss.xml',
+    //   'http://news.yahoo.co.jp/pickup/local/rss.xml'
+    // ];
+    var options = {
+      // ua偽装しないとはてブ取得できない
+      url: 'http://b.hatena.ne.jp/entrylist?sort=hot&threshold=3&url=http://headlines.yahoo.co.jp/&mode=rss',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36'
+      }
+    };
     var articles = [];
-    for (var j in urls) {
-      var url = urls[j];
-      var yrssXml = yield getFiveFilter(url);
-      // var xmlData = yield readFile(__dirname + '/../rss.xml');
-      var json = yield getParseJson(yrssXml);
-      var baseUrl = 'http://210.140.161.190:3000/';
-      for (var i in json.rss.channel[0].item) {
-        var url = json.rss.channel[0].item[i].link[0];
-        var title = json.rss.channel[0].item[i].title[0];
-        var description = json.rss.channel[0].item[i].description[0];
-        description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g,'');
-        var descriptions = description.split(/\s+/g);
+    var yrssXml = yield getRequest(options);
+    // var xmlData = yield readFile(__dirname + '/../rss.xml');
+    var json = yield getParseJson(yrssXml);
+    var baseUrl = 'http://210.140.161.190:3000/';
+    for (var i in json['rdf:RDF'].item) {
+      var url = json['rdf:RDF'].item[i].link[0];
+      var title = json['rdf:RDF'].item[i].title[0];
+
+      // 不要文字削除
+      title = title.replace(/ - Yahoo!ニュース/g, '');
+      title = title.replace(/(\(|（).*(\)|）)/g, '');
+
+      var description = json['rdf:RDF'].item[i].description[0];
+      // description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
+      // var descriptions = description.split(/\s+/g);
 //        descriptions = descriptions.filter(v => {
 //          return v.match(/。/);
 //        });
-        description = descriptions.join('');
-        var body = yield getSummarize(description);
-        body = JSON.parse(body);
-        var shortDescription = '';
-        body.summary.forEach(sentence => {
-          shortDescription += sentence;
-        });
-        var titleDescription = `${title}。${shortDescription}`;
-        var fileName = `ytest${j}${i}`;
-        yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
-        yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
-        yield wav2mp3(fileName);
-        //yield soxExec(fileName);
-        var imagePath = json.rss.channel[0].item[i]['og:image'][0];
-        if (imagePath == "") {
-          imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';
-        }
-        var article = {
-          url: url,
-          title: title,
-          // description: json.rss.channel[0].item[i].description[0],
-          shortDescription: titleDescription,
-          imagePath: imagePath,
-          voicePathOgg: `${baseUrl}${fileName}.ogg`,
-          voicePathWav: `${baseUrl}${fileName}.wav`,
-          voicePathMp3: `${baseUrl}${fileName}.mp3`
-        };
-        articles.push(article);
+      // description = descriptions.join('');
+      var body = yield getSummarize(description);
+      body = JSON.parse(body);
+      var shortDescription = '';
+      body.summary.forEach(sentence => {
+        shortDescription += sentence;
+      });
+      var titleDescription = `${title}。${shortDescription}`;
+      var fileName = `ytest${i}`;
+      yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
+      yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
+      yield wav2mp3(fileName);
+      // var imagePath = json.rss.channel[0].item[i]['og:image'][0];
+      var imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
+      if (imagePath == "") {
+        imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
       }
+      var article = {
+        url: url,
+        title: title,
+        // description: json.rss.channel[0].item[i].description[0],
+        shortDescription: titleDescription,
+        imagePath: imagePath,
+        voicePathOgg: `${baseUrl}${fileName}.ogg`,
+        voicePathWav: `${baseUrl}${fileName}.wav`,
+        voicePathMp3: `${baseUrl}${fileName}.mp3`
+      };
+      articles.push(article);
     }
-    return yield writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
+    yield writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
+    console.log('end ybatch');
   } catch (e) {
     console.error(e);
   }
-  console.log('end ybatch');
 });

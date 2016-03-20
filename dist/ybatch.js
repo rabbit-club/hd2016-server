@@ -9,7 +9,6 @@ var xml2js = require('xml2js');
 var Entities = require('html-entities').AllHtmlEntities;
 var co = require('co');
 var sox = require('sox');
-var exec = require('exec');
 
 var FORMAT_TYPE_OGG = 'ogg';
 var FORMAT_TYPE_WAV = 'wav';
@@ -59,21 +58,6 @@ var wav2mp3 = function wav2mp3(fileName) {
       resolve(true);
     });
     job.start();
-  });
-};
-
-var soxExec = function soxExec(fileName) {
-  return new Promise(function (resolve, reject) {
-    var wavFilePath = __dirname + ('/../public/' + fileName + '.wav');
-    var mp3FilePath = __dirname + ('/../public/' + fileName + '.mp3');
-    exec(['sox', wavFilePath, mp3FilePath], function (err, out, code) {
-      if (err) {
-        console.log(err);
-        reject(err);
-      } else {
-        resolve(true);
-      }
-    });
   });
 };
 
@@ -147,61 +131,86 @@ var getFiveFilter = function getFiveFilter(url) {
   });
 };
 
+var getRequest = function getRequest(options) {
+  return new Promise(function (resolve, reject) {
+    request(options, function (error, response, body) {
+      if (error) {
+        console.log(error);
+        reject(error);
+      } else {
+        resolve(body);
+      }
+    });
+  });
+};
+
 co(regeneratorRuntime.mark(function _callee() {
-  var urls, articles, j, url, yrssXml, json, baseUrl, i, title, description, descriptions, body, shortDescription, titleDescription, fileName, imagePath, article;
+  var options, articles, yrssXml, json, baseUrl, i, url, title, description, body, shortDescription, titleDescription, fileName, imagePath, article;
   return regeneratorRuntime.wrap(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
         case 0:
           console.log('start ybatch');
           _context.prev = 1;
-          urls = ['http://news.yahoo.co.jp/pickup/domestic/rss.xml', 'http://news.yahoo.co.jp/pickup/world/rss.xml', 'http://news.yahoo.co.jp/pickup/economy/rss.xml', 'http://news.yahoo.co.jp/pickup/entertainment/rss.xml', 'http://news.yahoo.co.jp/pickup/sports/rss.xml', 'http://news.yahoo.co.jp/pickup/computer/rss.xml', 'http://news.yahoo.co.jp/pickup/science/rss.xml', 'http://news.yahoo.co.jp/pickup/local/rss.xml'];
+
+          // var urls = [
+          //   'http://news.yahoo.co.jp/pickup/domestic/rss.xml',
+          //   'http://news.yahoo.co.jp/pickup/world/rss.xml',
+          //   'http://news.yahoo.co.jp/pickup/economy/rss.xml',
+          //   'http://news.yahoo.co.jp/pickup/entertainment/rss.xml',
+          //   'http://news.yahoo.co.jp/pickup/sports/rss.xml',
+          //   'http://news.yahoo.co.jp/pickup/computer/rss.xml',
+          //   'http://news.yahoo.co.jp/pickup/science/rss.xml',
+          //   'http://news.yahoo.co.jp/pickup/local/rss.xml'
+          // ];
+          options = {
+            // ua偽装しないとはてブ取得できない
+            url: 'http://b.hatena.ne.jp/entrylist?sort=hot&threshold=3&url=http://headlines.yahoo.co.jp/&mode=rss',
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/48.0.2564.109 Safari/537.36'
+            }
+          };
           articles = [];
-          _context.t0 = regeneratorRuntime.keys(urls);
+          _context.next = 6;
+          return getRequest(options);
 
-        case 5:
-          if ((_context.t1 = _context.t0()).done) {
-            _context.next = 46;
-            break;
-          }
-
-          j = _context.t1.value;
-          url = urls[j];
-          _context.next = 10;
-          return getFiveFilter(url);
-
-        case 10:
+        case 6:
           yrssXml = _context.sent;
-          _context.next = 13;
+          _context.next = 9;
           return getParseJson(yrssXml);
 
-        case 13:
+        case 9:
           json = _context.sent;
           baseUrl = 'http://210.140.161.190:3000/';
-          _context.t2 = regeneratorRuntime.keys(json.rss.channel[0].item);
+          _context.t0 = regeneratorRuntime.keys(json['rdf:RDF'].item);
 
-        case 16:
-          if ((_context.t3 = _context.t2()).done) {
-            _context.next = 44;
+        case 12:
+          if ((_context.t1 = _context.t0()).done) {
+            _context.next = 39;
             break;
           }
 
-          i = _context.t3.value;
-          url = json.rss.channel[0].item[i].link[0];
-          title = json.rss.channel[0].item[i].title[0];
-          description = json.rss.channel[0].item[i].description[0];
+          i = _context.t1.value;
+          url = json['rdf:RDF'].item[i].link[0];
+          title = json['rdf:RDF'].item[i].title[0];
 
-          description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
-          descriptions = description.split(/\s+/g);
+          // 不要文字削除
+
+          title = title.replace(/ - Yahoo!ニュース/g, '');
+          title = title.replace(/(\(|（).*(\)|）)/g, '');
+
+          description = json['rdf:RDF'].item[i].description[0];
+          // description = description.replace(/<("[^"]*"|'[^']*'|[^'">])*>/g, '');
+          // var descriptions = description.split(/\s+/g);
           //        descriptions = descriptions.filter(v => {
           //          return v.match(/。/);
           //        });
+          // description = descriptions.join('');
 
-          description = descriptions.join('');
-          _context.next = 26;
+          _context.next = 21;
           return getSummarize(description);
 
-        case 26:
+        case 21:
           body = _context.sent;
 
           body = JSON.parse(body);
@@ -211,24 +220,24 @@ co(regeneratorRuntime.mark(function _callee() {
             shortDescription += sentence;
           });
           titleDescription = title + '。' + shortDescription;
-          fileName = 'ytest' + j + i;
-          _context.next = 34;
+          fileName = 'ytest' + i;
+          _context.next = 29;
           return callVoiceText(fileName, titleDescription, FORMAT_TYPE_OGG);
 
-        case 34:
-          _context.next = 36;
+        case 29:
+          _context.next = 31;
           return callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
 
-        case 36:
-          _context.next = 38;
+        case 31:
+          _context.next = 33;
           return wav2mp3(fileName);
 
-        case 38:
-          //yield soxExec(fileName);
-          imagePath = json.rss.channel[0].item[i]['og:image'][0];
+        case 33:
+          // var imagePath = json.rss.channel[0].item[i]['og:image'][0];
+          imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
 
           if (imagePath == "") {
-            imagePath = 'http://livedoor.4.blogimg.jp/jin115/imgs/c/b/cb8e2cba-s.jpg';
+            imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
           }
           article = {
             url: url,
@@ -242,33 +251,28 @@ co(regeneratorRuntime.mark(function _callee() {
           };
 
           articles.push(article);
-          _context.next = 16;
+          _context.next = 12;
+          break;
+
+        case 39:
+          _context.next = 41;
+          return writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
+
+        case 41:
+          console.log('end ybatch');
+          _context.next = 47;
           break;
 
         case 44:
-          _context.next = 5;
-          break;
+          _context.prev = 44;
+          _context.t2 = _context['catch'](1);
 
-        case 46:
-          _context.next = 48;
-          return writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
+          console.error(_context.t2);
 
-        case 48:
-          return _context.abrupt('return', _context.sent);
-
-        case 51:
-          _context.prev = 51;
-          _context.t4 = _context['catch'](1);
-
-          console.error(_context.t4);
-
-        case 54:
-          console.log('end ybatch');
-
-        case 55:
+        case 47:
         case 'end':
           return _context.stop();
       }
     }
-  }, _callee, this, [[1, 51]]);
+  }, _callee, this, [[1, 44]]);
 }));
