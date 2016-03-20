@@ -145,7 +145,7 @@ var getRequest = function getRequest(options) {
 };
 
 co(regeneratorRuntime.mark(function _callee() {
-  var options, articles, yrssXml, json, baseUrl, i, url, title, description, body, shortDescription, titleDescription, fileName, imagePath, article;
+  var options, articles, yrssXml, json, baseUrl, i, url, title, description, body, shortDescription, titleDescription, fileName, content, imagePath, article;
   return regeneratorRuntime.wrap(function _callee$(_context) {
     while (1) {
       switch (_context.prev = _context.next) {
@@ -186,7 +186,7 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 12:
           if ((_context.t1 = _context.t0()).done) {
-            _context.next = 49;
+            _context.next = 52;
             break;
           }
 
@@ -257,8 +257,14 @@ co(regeneratorRuntime.mark(function _callee() {
 
         case 43:
           // var imagePath = json.rss.channel[0].item[i]['og:image'][0];
-          imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
+          content = json['rdf:RDF'].item[i]['content:encoded'][0];
 
+          content = content.match(/http:\/\/cdn-ak.b.st-hatena.com\/entryimage\/.*jpg/);
+          imagePath = "";
+
+          if (content != null) {
+            imagePath = content[0];
+          }
           if (imagePath == "") {
             imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
           }
@@ -277,26 +283,25 @@ co(regeneratorRuntime.mark(function _callee() {
           _context.next = 12;
           break;
 
-        case 49:
-          _context.next = 51;
+        case 52:
+          _context.next = 54;
           return writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
 
-        case 51:
+        case 54:
           console.log('end ybatch');
-          _context.next = 58;
+          _context.next = 60;
           break;
 
-        case 54:
-          _context.prev = 54;
+        case 57:
+          _context.prev = 57;
           _context.t3 = _context['catch'](1);
 
-          console.log('moge');
           console.error(_context.t3);
 
-        case 58:
+        case 60:
         case 'end':
           return _context.stop();
       }
     }
-  }, _callee, this, [[1, 54], [25, 29]]);
+  }, _callee, this, [[1, 57], [25, 29]]);
 }));

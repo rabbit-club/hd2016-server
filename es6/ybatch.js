@@ -209,7 +209,12 @@ co(function* () {
       yield callVoiceText(fileName, titleDescription, FORMAT_TYPE_WAV);
       yield wav2mp3(fileName);
       // var imagePath = json.rss.channel[0].item[i]['og:image'][0];
-      var imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
+      var content = json['rdf:RDF'].item[i]['content:encoded'][0];
+      content = content.match(/http:\/\/cdn-ak.b.st-hatena.com\/entryimage\/.*jpg/);
+      var imagePath = "";
+      if (content != null) {
+        imagePath = content[0];
+      }
       if (imagePath == "") {
         imagePath = 'http://i.yimg.jp/images/jpnews/cre/common/all/images/fbico_ogp_1200x630.png';
       }
@@ -228,7 +233,6 @@ co(function* () {
     yield writeFile(__dirname + '/../yresult.json', JSON.stringify(articles));
     console.log('end ybatch');
   } catch (e) {
-        console.log('moge');
     console.error(e);
   }
 });
